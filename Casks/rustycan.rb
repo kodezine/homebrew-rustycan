@@ -8,6 +8,7 @@ cask "rustycan" do
   homepage "https://github.com/kodezine/RustyCAN"
 
   app "RustyCAN.app"
+  binary "#{appdir}/RustyCAN.app/Contents/MacOS/rustycan"
 
   # RustyCAN is not notarized. Strip the quarantine flag Gatekeeper attaches
   # to downloaded apps so the "damaged" error does not appear at first launch.
