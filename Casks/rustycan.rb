@@ -9,7 +9,17 @@ cask "rustycan" do
 
   app "RustyCAN.app"
 
+  # RustyCAN is not notarized. Strip the quarantine flag Gatekeeper attaches
+  # to downloaded apps so the "damaged" error does not appear at first launch.
+  preflight do
+    system_command "/usr/bin/xattr",
+                   args: ["-dr", "com.apple.quarantine", "#{staged_path}/RustyCAN.app"]
+  end
+
   caveats <<~EOS
+    RustyCAN is not notarized with Apple. If macOS still blocks it, run:
+      xattr -dr com.apple.quarantine /Applications/RustyCAN.app
+
     RustyCAN requires the PEAK PCANBasic driver to use PEAK USB adapters.
     Download from:
       macOS:          https://mac-can.com
