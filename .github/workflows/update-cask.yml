@@ -4,9 +4,10 @@ on:
   repository_dispatch:
     types: [new-release]
 
-# Minimal permissions — only write to repo contents (for the git push)
+# Needs contents+PRs write so the workflow can open and auto-merge the PR
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update-cask:
@@ -16,7 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Use the default GITHUB_TOKEN — no external PAT needed for this repo
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update Casks/rustycan.rb
@@ -31,12 +31,23 @@ jobs:
             -e "s|url \".*\"|url \"${URL}\"|" \
             Casks/rustycan.rb
 
-      - name: Commit and push
+      - name: Open auto-merge PR
         env:
           VERSION: ${{ github.event.client_payload.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BRANCH="ci/bump-rustycan-v${VERSION}"
           git config user.email "ci@kodezine.com"
           git config user.name "RustyCAN CI"
+          git checkout -b "$BRANCH"
           git add Casks/rustycan.rb
           git commit -m "chore: bump RustyCAN to v${VERSION}"
-          git push
+          git push origin "$BRANCH"
+          # Open PR and immediately enable auto-merge (merges as soon as
+          # branch protection checks pass — no human approval needed for CI bot)
+          gh pr create \
+            --title "chore: bump RustyCAN to v${VERSION}" \
+            --body "Automated Cask update triggered by RustyCAN release v${VERSION}." \
+            --base main \
+            --head "$BRANCH"
+          gh pr merge "$BRANCH" --auto --squash
