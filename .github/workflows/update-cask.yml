@@ -1,0 +1,42 @@
+name: Update Cask
+
+on:
+  repository_dispatch:
+    types: [new-release]
+
+# Minimal permissions — only write to repo contents (for the git push)
+permissions:
+  contents: write
+
+jobs:
+  update-cask:
+    name: Bump Cask to ${{ github.event.client_payload.version }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use the default GITHUB_TOKEN — no external PAT needed for this repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Casks/rustycan.rb
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+          SHA256:  ${{ github.event.client_payload.sha256 }}
+          URL:     ${{ github.event.client_payload.url }}
+        run: |
+          sed -i \
+            -e "s|version \".*\"|version \"${VERSION}\"|" \
+            -e "s|sha256 \".*\"|sha256 \"${SHA256}\"|" \
+            -e "s|url \".*\"|url \"${URL}\"|" \
+            Casks/rustycan.rb
+
+      - name: Commit and push
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          git config user.email "ci@kodezine.com"
+          git config user.name "RustyCAN CI"
+          git add Casks/rustycan.rb
+          git commit -m "chore: bump RustyCAN to v${VERSION}"
+          git push

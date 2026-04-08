@@ -1,0 +1,3 @@
+# All Cask changes require review from a kodezine org maintainer.
+# This ensures no unauthorised formula changes slip through a PR.
+Casks/  @kodezine/maintainers
