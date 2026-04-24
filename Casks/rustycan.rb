@@ -1,8 +1,8 @@
 cask "rustycan" do
-  version "0.1.2"
-  sha256 "c335c7a0b16d24317fd1ecb258b90fa495ebfe27f28f739c8dd0b3af592bdfad"
+  version "0.1.3"
+  sha256 "dd4017bd21a0d81c4cd73d9227b7753d441fe15e74f69ebf0604f81ffe7b132c"
 
-  url "https://github.com/kodezine/RustyCAN/releases/download/v0.1.2/rustycan-v0.1.2-aarch64-apple-darwin.dmg"
+  url "https://github.com/kodezine/RustyCAN/releases/download/v0.1.3/rustycan-v0.1.3-aarch64-apple-darwin.dmg"
   name "RustyCAN"
   desc "CANopen viewer: log and analyze SDO/PDO/NMT events"
   homepage "https://github.com/kodezine/RustyCAN"
