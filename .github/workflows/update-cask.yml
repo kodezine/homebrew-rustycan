@@ -31,11 +31,17 @@ jobs:
             -e "s|url \".*\"|url \"${URL}\"|" \
             Casks/rustycan.rb
 
-      - name: Open auto-merge PR
+      - name: Open and merge bump PR
         env:
           VERSION: ${{ github.event.client_payload.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Skip if the Cask is unchanged (e.g. re-dispatched event).
+          if git diff --quiet -- Casks/rustycan.rb; then
+            echo "Cask already at v${VERSION}; nothing to do."
+            exit 0
+          fi
+
           BRANCH="ci/bump-rustycan-v${VERSION}"
           git config user.email "ci@kodezine.com"
           git config user.name "RustyCAN CI"
@@ -43,11 +49,17 @@ jobs:
           git add Casks/rustycan.rb
           git commit -m "chore: bump RustyCAN to v${VERSION}"
           git push origin "$BRANCH"
-          # Open PR and immediately enable auto-merge (merges as soon as
-          # branch protection checks pass — no human approval needed for CI bot)
+
           gh pr create \
             --title "chore: bump RustyCAN to v${VERSION}" \
             --body "Automated Cask update triggered by RustyCAN release v${VERSION}." \
             --base main \
             --head "$BRANCH"
-          gh pr merge "$BRANCH" --auto --squash
+
+          # Merge immediately. `--auto` only *queues* a merge and requires
+          # repo-level auto-merge + a required status check to ever fire —
+          # without those the PR silently stays open forever. Do a plain
+          # squash merge and fall back to queuing auto-merge if branch
+          # protection blocks the direct merge.
+          gh pr merge "$BRANCH" --squash --delete-branch \
+            || gh pr merge "$BRANCH" --squash --auto --delete-branch
