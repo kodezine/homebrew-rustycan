@@ -7,14 +7,16 @@ cask "rustycan" do
   desc "CANopen viewer: log and analyze SDO/PDO/NMT events"
   homepage "https://kodezine.com/software/rustycan.html"
 
+  depends_on :macos
+
   app "RustyCAN.app"
   binary "#{appdir}/RustyCAN.app/Contents/MacOS/rustycan"
 
   # RustyCAN is not notarized. Strip the quarantine flag Gatekeeper attaches
   # to downloaded apps so the "damaged" error does not appear at first launch.
-  preflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{staged_path}/RustyCAN.app"]
+  preflight_steps do
+    run "/usr/bin/xattr",
+        args: ["-dr", "com.apple.quarantine", "{{staged_path}}/RustyCAN.app"]
   end
 
   caveats <<~EOS
