@@ -1,0 +1,49 @@
+name: Update Cask
+
+# Forgejo-native cask bump (Model B: this Forgejo repo is the PRIMARY tap;
+# GitHub is a read-only push-mirror for brew's IPv4 access). Triggered by the
+# rustycan release pipeline via the workflow_dispatch API once a final release's
+# .dmg is live on kodezine.com. Writes the bump directly to this repo's main.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: New version, without leading v (e.g. 0.3.1)
+        required: true
+      sha256:
+        description: SHA-256 of the macOS .dmg
+        required: true
+      url:
+        description: Public (IPv4) download URL of the .dmg
+        required: true
+
+jobs:
+  update-cask:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm-slim
+    steps:
+      - name: Tooling
+        run: apt-get update -qq && apt-get install -y --no-install-recommends git ca-certificates
+
+      - name: Clone (token auth; container has no checkout action)
+        run: |
+          git clone --depth 1 \
+            "https://x-access-token:${{ github.token }}@git.kodezine.com/${{ github.repository }}.git" repo
+
+      - name: Bump cask + push to main
+        working-directory: repo
+        run: |
+          sed -i \
+            -e "s|version \".*\"|version \"${{ inputs.version }}\"|" \
+            -e "s|sha256 \".*\"|sha256 \"${{ inputs.sha256 }}\"|" \
+            -e "s|url \".*\"|url \"${{ inputs.url }}\"|" \
+            Casks/rustycan.rb
+          if git diff --quiet -- Casks/rustycan.rb; then
+            echo "Cask already at v${{ inputs.version }}; nothing to do."
+            exit 0
+          fi
+          git config user.email "ci@kodezine.com"
+          git config user.name "rustycan CI"
+          git commit -am "chore: bump rustycan to v${{ inputs.version }}"
+          git push origin HEAD:main
