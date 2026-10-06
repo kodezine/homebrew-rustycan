@@ -5,7 +5,7 @@ cask "rustycan" do
   url "https://github.com/kodezine/RustyCAN/releases/download/v0.3.0/rustycan-v0.3.0-aarch64-apple-darwin.dmg"
   name "RustyCAN"
   desc "CANopen viewer: log and analyze SDO/PDO/NMT events"
-  homepage "https://github.com/kodezine/RustyCAN"
+  homepage "https://kodezine.com/software/rustycan.html"
 
   app "RustyCAN.app"
   binary "#{appdir}/RustyCAN.app/Contents/MacOS/rustycan"
